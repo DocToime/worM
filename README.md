@@ -1,5 +1,7 @@
 # WorM · The memory garden
 
+Play it at [https://doctoime.github.io/worM/](https://doctoime.github.io/worM/).
+
 A browser working-memory training game: watch peppers ripen in a 3×3 garden, sort them for market or sauce, then recall their locations in order. Includes interactive onboarding, adaptive training, fixed memory check-ins, an original-style protocol, local profiles, session history, and detailed data exports.
 
 The design was reviewed and planned before implementation in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). The two supplied source documents are preserved unchanged.
