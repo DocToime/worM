@@ -50,6 +50,7 @@ button svg { flex-shrink: 0; }
 .notice.positive { background: #eaf0df; border-color: #c9d8b6; color: #3e5e2e; }
 .notice p:last-child { margin-bottom: 0; }
 .storage-warning { flex-shrink: 0; border: 1px solid #dfb18f; background: #fcf0df; color: #714627; border-radius: 7px; padding: 8px 12px; font-size: 13px; line-height: 1.4; margin-top: 8px; }
+.storage-warning .text-button { min-height: 32px; padding: 0 4px; color: inherit; }
 .site-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding: 18px 0; margin-top: auto; font-size: 12px; color: var(--muted); gap: 12px; }
 .save-indicator { display: flex; align-items: center; gap: 6px; }
 .save-indicator.error { color: #8e3827; }

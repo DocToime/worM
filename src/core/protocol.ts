@@ -1,5 +1,5 @@
 import type { Mode, Preferences, Protocol } from './types';
-export const BUILD_VERSION = '1.1.0';
+export const BUILD_VERSION = '1.2.0';
 export const defaults: Preferences = { sound: false, reducedMotion: false, rounds: 10, startSpan: 2, delayMs: 5000, calibration: null };
 export function protocolFor(mode: Mode, prefs: Preferences = defaults): Protocol {
   const common: Protocol = {

@@ -28,9 +28,17 @@ npm run build
 npm run preview
 ```
 
-The `dist/` directory is a standalone static site. Serve it over HTTP or HTTPS; do not open `index.html` directly as a `file:` URL. An HTTPS origin is recommended for hosted use. No backend, API keys, third-party fonts, analytics, or remote assets are required. The app runs without network requests during a session once loaded. Offline reload/install support is not included.
+The `dist/` directory is a standalone static site. Serve it over HTTP or HTTPS; do not open `index.html` directly as a `file:` URL. An HTTPS origin is recommended for hosted use. No backend, API keys, third-party fonts, analytics, or remote assets are required. After the first visit, a service worker precaches the app so later visits work with the network off. Production PWA preview is `npm run build && npm run preview` (still served from `/` because the Vite base is `./`).
 
-Use the same origin and browser profile to return to your saved garden: changing the hostname, scheme, or port gives the browser a different local data store.
+Use the same origin and browser profile to return to your saved garden: changing the hostname, scheme, or port gives the browser a different local data store. Installing the app is not a backup.
+
+## Install and offline
+
+Chrome and other Chromium browsers can install WorM from **Settings → Add to Home Screen** after the install prompt is available. On iPhone or iPad, open Share and choose **Add to Home Screen**. Firefox and Safari desktop can play offline in a tab even when they do not offer install chrome.
+
+The first visit needs a network. Once the service worker is ready, later visits can reload and play with the network off. A sitting keeps the code it started with: a new deploy waits until WorM is fully closed, or until you confirm **Update now** on a non-play screen. Reloading during an active round still invalidates that attempt, as before.
+
+Gardeners and sessions stay in this browser profile. Chrome’s tab and installed window share them. Older iOS versions may keep Safari and the Home Screen icon as separate data stores, and any browser may delete site data under storage pressure. Export a JSON backup from the journal if the records matter. `file:` URLs remain unsupported.
 
 ## Play
 
@@ -42,7 +50,7 @@ Use the same origin and browser profile to return to your saved garden: changing
 
 Sorting supports pointer/touch, **A / left arrow**, and **F / right arrow**. Recall supports pointer/touch or arrow-key navigation with Enter/Space. The garden is one keyboard tab stop; focus moves to it when recall begins. **Escape** or **Pause** takes a break. Pausing an active round discards that attempt from the score and starts a fresh sequence on return.
 
-Settings include separate local gardeners, nickname, number of training rounds, starting span, retention interval, gentle sound, reduced motion, and optional ruler-based garden calibration. Memory check-ins keep their own fixed settings. Check-ins and the original-style protocol can run on smaller screens, with a warning that those visits stay separate from larger-screen scores.
+Settings include separate local gardeners, nickname, number of training rounds, starting span, retention interval, gentle sound, reduced motion, optional ruler-based garden calibration, Home Screen install, and a request to keep garden data on the device. Memory check-ins keep their own fixed settings. Check-ins and the original-style protocol can run on smaller screens, with a warning that those visits stay separate from larger-screen scores.
 
 ## Protocol decisions
 
@@ -103,7 +111,7 @@ Backup import is not included in this release. Exported JSON can be archived or 
 
 The game handles hidden tabs, lost window focus, viewport changes, explicit pauses, adult help, and reload recovery. Inputs outside the eligible phase, keyboard repeat, duplicate sorting, and rapid duplicate recall delivery are rejected with reasons. Pointerdown and synthetic click are not both accepted for the same pointer action.
 
-No service worker updates or network asset loads occur inside the task. Fonts use system stacks; art is original inline SVG. Browser/audio setup never controls the phase engine. Physical size calibration is optional and invalidated by a viewport/pixel-ratio change. The actual presented geometry remains relevant even when a requested 16 cm garden cannot fit.
+No service worker updates or network asset loads occur inside the task. A waiting service worker is applied only between sittings. Fonts use system stacks; art is original inline SVG. Browser/audio setup never controls the phase engine. Physical size calibration is optional and invalidated by a viewport/pixel-ratio change. The actual presented geometry remains relevant even when a requested 16 cm garden cannot fit.
 
 ## Project layout
 
@@ -125,11 +133,13 @@ The implementation plan contains the fuller provenance register, formulas, state
 ```bash
 npm test
 npm run build
+node scripts/check-pwa.mjs
 npx playwright install chromium
 npm run test:browser
+npm run test:pwa
 ```
 
-Playwright uses port 5174 and reuses the matching local dev server, or starts one if needed. Its browser clock exercises the real production engine without adding test-only timing switches or answer hooks to the app. Test fixtures create deterministic sessions through the same local storage and engine modules used by the interface.
+Playwright uses port 5174 and reuses the matching local dev server, or starts one if needed. The PWA suite builds the production site and previews it on port 4175. Its browser clock exercises the real production engine without adding test-only timing switches or answer hooks to the app. Test fixtures create deterministic sessions through the same local storage and engine modules used by the interface.
 
 The test suite covers generation, scoring, missingness, adaptation, fixed timings, repeat/early inputs, interruption/recovery, profile isolation, onboarding, complete training and assessment sessions, downloads, history persistence, and responsive layouts. The playability suite also checks 16 viewport sizes, calibrated layouts, no-scroll touch play, keyboard navigation and leaving an empty session. Screenshots are written under `test-results/` when the browser suite runs. That directory is generated and ignored by source control.
 
@@ -139,6 +149,6 @@ Real physical tablet/touchscreen timing, browser storage eviction under device p
 
 Designed from [WorM_Game_Specification.md](WorM_Game_Specification.md) and [WorM_Browser_Scientific_Design_Review.md](WorM_Browser_Scientific_Design_Review.md), with task attribution to Ferreira et al. (2025), [Neurodevelopmental disorders: assessing and training working memory](https://doi.org/10.1186/s40359-025-02912-9), and the EMPOWER project described in those documents. All included game artwork is newly authored.
 
-Browser references: [Vite](https://vite.dev/guide/), [animation-frame scheduling](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame), and [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API).
+Browser references: [Vite](https://vite.dev/guide/), [animation-frame scheduling](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame), [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API), and [vite-plugin-pwa](https://vite-pwa-org.netlify.app/).
 
-Future extensions include backup import/cloud sync, an independent cognitive-task battery, translated/voice instructions, optional install/offline support, and a teacher dashboard. These are deliberately outside the shipped game. No public deployment, accounts, or external messages were created.
+Future extensions include backup import/cloud sync, an independent cognitive-task battery, translated/voice instructions, and a teacher dashboard. Optional install and offline reload shipped in 1.2.0; see [PWA_OFFLINE_IMPLEMENTATION_PLAN.md](PWA_OFFLINE_IMPLEMENTATION_PLAN.md). No accounts or external messages were created.

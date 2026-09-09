@@ -11,13 +11,32 @@ import Results, { History } from './components/Results';
 import Settings from './components/Settings';
 
 type Screen = 'home' | 'tutorial' | 'game' | 'results' | 'history' | 'settings';
+type InstallPrompt = Event & { prompt: () => Promise<void> };
+function displayMode() {
+  if (matchMedia('(display-mode: standalone)').matches || Boolean((navigator as Navigator & { standalone?: boolean }).standalone)) return 'standalone';
+  if (matchMedia('(display-mode: minimal-ui)').matches) return 'minimal-ui';
+  if (matchMedia('(display-mode: fullscreen)').matches) return 'fullscreen';
+  return 'browser';
+}
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home'), [mode, setMode] = useState<Mode>('training');
   const [profiles, setProfiles] = useState<Profile[]>([]), [activeId, setActiveId] = useState(''), [prefs, setPrefs] = useState<Preferences>(defaults), [sessions, setSessions] = useState<Session[]>([]), [current, setCurrent] = useState<Session | null>(null);
   const [autoStart, setAutoStart] = useState(false);
   const [compactScreen, setCompactScreen] = useState(compactViewport());
   const [loading, setLoading] = useState(true), [storageState, setStorageState] = useState<'saved' | 'saving' | 'error'>('saved'), [notice, setNotice] = useState('');
+  const [needRefresh, setNeedRefresh] = useState(false), [installPrompt, setInstallPrompt] = useState<InstallPrompt | null>(null);
   useEffect(() => { const resize = () => setCompactScreen(compactViewport()); window.addEventListener('resize', resize); return () => window.removeEventListener('resize', resize); }, []);
+  useEffect(() => {
+    const onPrompt = (event: Event) => { event.preventDefault(); setInstallPrompt(event as InstallPrompt); };
+    window.addEventListener('beforeinstallprompt', onPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', onPrompt);
+  }, []);
+  useEffect(() => {
+    if (!import.meta.env.PROD) return;
+    let cancelled = false, unsub = () => {};
+    void import('./pwa').then(mod => { if (!cancelled) unsub = mod.subscribeNeedRefresh(setNeedRefresh); });
+    return () => { cancelled = true; unsub(); };
+  }, []);
   const revision = useRef(0), destination = useRef<Mode>('training');
   useEffect(() => { loadData().then(data => { setProfiles(data.profiles); setActiveId(data.activeId); setPrefs(data.prefs); setSessions(data.sessions); }).catch(() => { const p = newProfile(); setProfiles([p]); setActiveId(p.id); setStorageState('error'); }).finally(() => setLoading(false)); }, []);
   useEffect(() => { document.documentElement.dataset.reducedMotion = String(prefs.reducedMotion); }, [prefs.reducedMotion]);
@@ -41,7 +60,7 @@ export default function App() {
       calibration: prefs.calibration?.viewport === viewportKey() ? prefs.calibration : null,
       sound: m === 'assessment' ? false : prefs.sound,
       reducedMotion: prefs.reducedMotion || matchMedia('(prefers-reduced-motion: reduce)').matches,
-      layoutVersion: 'compact-2',
+      layoutVersion: 'compact-2', displayMode: displayMode(),
       inputMapping: { good: ['A', 'ArrowLeft'], worm: ['F', 'ArrowRight'], recall: 'pointerdown or arrow-key navigation with Enter/Space' },
     });
     setAutoStart(startImmediately); setCurrent(session); persist(session); setScreen('game');
@@ -75,6 +94,7 @@ export default function App() {
       <span className="profile-chip" title={profile.name}><span>{profile.name.slice(0, 1).toUpperCase()}</span>{profile.name}</span>
     </header>
     {storageState === 'error' && <div className="storage-warning" role="alert">Not saved. Keep this tab open and download your session from Results.</div>}
+    {needRefresh && screen !== 'game' && !active && <div className="storage-warning" role="status">A garden update is ready. <button className="text-button" onClick={() => { void import('./pwa').then(mod => mod.applyPwaUpdate()); }}>Update now</button></div>}
     {screen === 'home' && <main className="home-page page-enter">
       <section className="home-hero">
         <div className="hero-copy"><span className="eyebrow">The memory garden</span><h1>A little garden.<br />A <em>growing</em> memory.</h1>
@@ -101,7 +121,7 @@ export default function App() {
     {screen === 'game' && current && <Game autoStart={autoStart} key={current.id} session={current} prefs={prefs} onSave={persist} onEnd={ended} onSound={() => updatePrefs({ ...prefs, sound: !prefs.sound })} />}
     {screen === 'results' && current && <Results session={current} profile={profile} onHome={() => navigate('home')} practicePassed={current.endReason === 'practice-passed'} onAgain={() => launch(current.protocol.mode === 'practice' ? current.endReason === 'practice-passed' ? destination.current : 'practice' : current.protocol.mode)} />}
     {screen === 'history' && <History sessions={sessions} profile={profile} onView={s => { destination.current = 'training'; setCurrent(s); navigate('results'); }} onStart={() => navigate('home')} />}
-    {screen === 'settings' && <Settings prefs={prefs} profiles={profiles} activeId={activeId} onPrefs={updatePrefs} onClose={() => navigate('home')} onProfile={id => { setActiveId(id); setCurrent(null); void setActiveProfile(id).catch(() => setStorageState('error')); }} onAdd={name => { const p = newProfile(name); setProfiles(rows => [...rows, p]); setActiveId(p.id); setCurrent(null); void Promise.all([saveProfile(p), setActiveProfile(p.id)]).catch(() => setStorageState('error')); }} onRename={name => { const p = { ...profile, name }; setProfiles(rows => rows.map(row => row.id === p.id ? p : row)); void saveProfile(p).catch(() => setStorageState('error')); }} onDelete={id => { void deleteProfile(id).then(async () => { let remaining = profiles.filter(p => p.id !== id); if (!remaining.length) { const fresh = newProfile(); await saveProfile(fresh); remaining = [fresh]; } setProfiles(remaining); setSessions(rows => rows.filter(s => s.participantId !== id)); setActiveId(remaining[0].id); setCurrent(null); await setActiveProfile(remaining[0].id); setNotice('Gardener and associated local sessions deleted. This cannot be undone.'); setScreen('home'); }).catch(() => setStorageState('error')); }} />}
+    {screen === 'settings' && <Settings prefs={prefs} profiles={profiles} activeId={activeId} installPrompt={installPrompt} onInstall={() => setInstallPrompt(null)} onPrefs={updatePrefs} onClose={() => navigate('home')} onProfile={id => { setActiveId(id); setCurrent(null); void setActiveProfile(id).catch(() => setStorageState('error')); }} onAdd={name => { const p = newProfile(name); setProfiles(rows => [...rows, p]); setActiveId(p.id); setCurrent(null); void Promise.all([saveProfile(p), setActiveProfile(p.id)]).catch(() => setStorageState('error')); }} onRename={name => { const p = { ...profile, name }; setProfiles(rows => rows.map(row => row.id === p.id ? p : row)); void saveProfile(p).catch(() => setStorageState('error')); }} onDelete={id => { void deleteProfile(id).then(async () => { let remaining = profiles.filter(p => p.id !== id); if (!remaining.length) { const fresh = newProfile(); await saveProfile(fresh); remaining = [fresh]; } setProfiles(remaining); setSessions(rows => rows.filter(s => s.participantId !== id)); setActiveId(remaining[0].id); setCurrent(null); await setActiveProfile(remaining[0].id); setNotice('Gardener and associated local sessions deleted. This cannot be undone.'); setScreen('home'); }).catch(() => setStorageState('error')); }} />}
     {screen !== 'game' && <footer className="site-footer"><span className={`save-indicator ${storageState}`}><span className="tiny-dot" />{storageState === 'saved' ? 'Saved on this device' : storageState === 'saving' ? 'Saving…' : 'Not saved · export a backup'}</span><span>WorM · The memory garden</span></footer>}
   </div>;
 }

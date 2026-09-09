@@ -155,5 +155,10 @@ test('phone layout and settings delete only the chosen profile', async ({ page }
   await page.getByLabel('Add a gardener', { exact: true }).fill('Second gardener'); await page.getByRole('button', { name: 'Add', exact: true }).click();
   await page.getByRole('button', { name: 'Delete this gardener and their sessions…' }).click(); await page.getByRole('button', { name: 'Delete gardener & sessions', exact: true }).click();
   await expect(page.locator('.profile-chip')).toContainText('Gardener');
-  await page.getByRole('button', { name: 'Progress' }).click(); await expect(page.locator('.history-row')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Progress' }).click();   await expect(page.locator('.history-row')).toHaveCount(1);
+});
+test('dev server does not register a service worker', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'A little garden. A growing memory.' })).toBeVisible();
+  expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)).toBe(0);
 });
