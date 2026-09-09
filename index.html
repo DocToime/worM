@@ -4,6 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#244c3c" />
+    <script>
+      (function () {
+        var pref = null;
+        try { pref = localStorage.getItem('worm-theme'); } catch (e) {}
+        if (pref !== 'dark' && pref !== 'system' && pref !== 'light') return;
+        var dark = pref === 'dark' || (pref === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+        if (!dark) return;
+        document.documentElement.dataset.theme = 'dark';
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', '#161c18');
+      })();
+    </script>
     <meta name="description" content="A little garden. A growing memory. Practise spatial memory with WorM's mindful pepper harvest." />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Mode, Preferences, Profile, Session } from './core/types';
-import { compactViewport, defaults, modeNames, protocolFor, viewportKey } from './core/protocol';
+import { compactViewport, defaults, modeNames, oppositeTheme, protocolFor, resolveTheme, storedTheme, THEME_COLOR_DARK, THEME_COLOR_LIGHT, viewportKey } from './core/protocol';
 import { createSession } from './core/engine';
 import { deleteProfile, loadData, newProfile, savePreferences, saveProfile, saveSession, setActiveProfile } from './data/storage';
 import { Icon, Pepper } from './components/Art';
@@ -20,9 +20,10 @@ function displayMode() {
 }
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home'), [mode, setMode] = useState<Mode>('training');
-  const [profiles, setProfiles] = useState<Profile[]>([]), [activeId, setActiveId] = useState(''), [prefs, setPrefs] = useState<Preferences>(defaults), [sessions, setSessions] = useState<Session[]>([]), [current, setCurrent] = useState<Session | null>(null);
+  const [profiles, setProfiles] = useState<Profile[]>([]), [activeId, setActiveId] = useState(''), [prefs, setPrefs] = useState<Preferences>(() => ({ ...defaults, theme: storedTheme() })), [sessions, setSessions] = useState<Session[]>([]), [current, setCurrent] = useState<Session | null>(null);
   const [autoStart, setAutoStart] = useState(false);
   const [compactScreen, setCompactScreen] = useState(compactViewport());
+  const [systemDark, setSystemDark] = useState(() => matchMedia('(prefers-color-scheme: dark)').matches);
   const [loading, setLoading] = useState(true), [storageState, setStorageState] = useState<'saved' | 'saving' | 'error'>('saved'), [notice, setNotice] = useState('');
   const [needRefresh, setNeedRefresh] = useState(false), [installPrompt, setInstallPrompt] = useState<InstallPrompt | null>(null);
   useEffect(() => { const resize = () => setCompactScreen(compactViewport()); window.addEventListener('resize', resize); return () => window.removeEventListener('resize', resize); }, []);
@@ -38,15 +39,28 @@ export default function App() {
     return () => { cancelled = true; unsub(); };
   }, []);
   const revision = useRef(0), destination = useRef<Mode>('training');
-  useEffect(() => { loadData().then(data => { setProfiles(data.profiles); setActiveId(data.activeId); setPrefs(data.prefs); setSessions(data.sessions); }).catch(() => { const p = newProfile(); setProfiles([p]); setActiveId(p.id); setStorageState('error'); }).finally(() => setLoading(false)); }, []);
+  useEffect(() => { loadData().then(data => { setProfiles(data.profiles); setActiveId(data.activeId); setPrefs(data.prefs); try { localStorage.setItem('worm-theme', data.prefs.theme); } catch { /* private mode */ } setSessions(data.sessions); }).catch(() => { const p = newProfile(); setProfiles([p]); setActiveId(p.id); setStorageState('error'); }).finally(() => setLoading(false)); }, []);
   useEffect(() => { document.documentElement.dataset.reducedMotion = String(prefs.reducedMotion); }, [prefs.reducedMotion]);
+  useEffect(() => {
+    const mq = matchMedia('(prefers-color-scheme: dark)');
+    const sync = () => {
+      setSystemDark(mq.matches);
+      const resolved = resolveTheme(prefs.theme, mq.matches);
+      document.documentElement.dataset.theme = resolved;
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', resolved === 'dark' ? THEME_COLOR_DARK : THEME_COLOR_LIGHT);
+    };
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, [prefs.theme]);
   useEffect(() => { window.scrollTo(0, 0); }, [screen]);
   const persist = useCallback((s: Session) => {
     const rev = ++revision.current; setStorageState(old => old === 'error' ? old : 'saving');
     setSessions(rows => [...rows.filter(row => row.id !== s.id), s]);
     void saveSession(s).then(() => { if (revision.current === rev) setStorageState('saved'); }).catch(() => setStorageState('error'));
   }, []);
-  const updatePrefs = (p: Preferences) => { setPrefs(p); void savePreferences(p).catch(() => setStorageState('error')); };
+  const updatePrefs = (p: Preferences) => { setPrefs(p); try { localStorage.setItem('worm-theme', p.theme); } catch { /* private mode */ } void savePreferences(p).catch(() => setStorageState('error')); };
   const profile = profiles.find(p => p.id === activeId) ?? profiles[0];
   const ownSessions = sessions.filter(s => s.participantId === activeId);
   const active = ownSessions.find(s => s.status === 'active');
@@ -83,6 +97,7 @@ export default function App() {
   const displayedMode = active?.protocol.mode ?? mode;
   const selectedProtocol = active?.protocol ?? protocolFor(displayedMode, prefs);
   const startLabel = active ? `Resume ${modeNames[displayedMode].toLowerCase()}` : mode === 'assessment' ? 'Start check-in' : 'Start training';
+  const resolvedTheme = resolveTheme(prefs.theme, systemDark);
   return <div className={`app-shell ${screen === 'game' ? 'playing' : ''}`}>
     <header className="site-header">
       <button className="brand" disabled={screen === 'game'} onClick={() => navigate('home')} aria-label="WorM home"><span className="brand-icon"><Pepper ripe /></span><span>WorM</span></button>
@@ -91,7 +106,10 @@ export default function App() {
         <button className={screen === 'history' ? 'nav-active' : ''} onClick={() => navigate('history')}><Icon name="chart" size={17} /><span>Progress</span></button>
         <button className={screen === 'settings' ? 'nav-active' : ''} onClick={() => navigate('settings')}><Icon name="settings" size={17} /><span>Settings</span></button>
       </nav>}
-      <span className="profile-chip" title={profile.name}><span>{profile.name.slice(0, 1).toUpperCase()}</span>{profile.name}</span>
+      <div className="header-end">
+        <button type="button" className="theme-toggle" aria-pressed={resolvedTheme === 'dark'} aria-label={resolvedTheme === 'dark' ? 'Switch to ivory garden' : 'Switch to dusk garden'} onClick={() => updatePrefs({ ...prefs, theme: oppositeTheme(resolvedTheme) })}><Icon name={resolvedTheme === 'dark' ? 'moon' : 'sun'} size={18} /></button>
+        <span className="profile-chip" title={profile.name}><span>{profile.name.slice(0, 1).toUpperCase()}</span>{profile.name}</span>
+      </div>
     </header>
     {storageState === 'error' && <div className="storage-warning" role="alert">Not saved. Keep this tab open and download your session from Results.</div>}
     {needRefresh && screen !== 'game' && !active && <div className="storage-warning" role="status">A garden update is ready. <button className="text-button" onClick={() => { void import('./pwa').then(mod => mod.applyPwaUpdate()); }}>Update now</button></div>}

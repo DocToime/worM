@@ -50,7 +50,7 @@ Gardeners and sessions stay in this browser profile. Chrome’s tab and installe
 
 Sorting supports pointer/touch, **A / left arrow**, and **F / right arrow**. Recall supports pointer/touch or arrow-key navigation with Enter/Space. The garden is one keyboard tab stop; focus moves to it when recall begins. **Escape** or **Pause** takes a break. Pausing an active round discards that attempt from the score and starts a fresh sequence on return.
 
-Settings include separate local gardeners, nickname, number of training rounds, starting span, retention interval, gentle sound, reduced motion, optional ruler-based garden calibration, Home Screen install, and a request to keep garden data on the device. Memory check-ins keep their own fixed settings. Check-ins and the original-style protocol can run on smaller screens, with a warning that those visits stay separate from larger-screen scores.
+Settings include separate local gardeners, nickname, number of training rounds, starting span, retention interval, gentle sound, reduced motion, garden brightness (ivory, dusk, or match this device), optional ruler-based garden calibration, Home Screen install, and a request to keep garden data on the device. The sun and moon in the header switch ivory and dusk without pausing a round; the plants and peppers stay the same. Memory check-ins keep their own fixed settings. Check-ins and the original-style protocol can run on smaller screens, with a warning that those visits stay separate from larger-screen scores.
 
 ## Protocol decisions
 

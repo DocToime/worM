@@ -336,7 +336,7 @@ Inject time/environment so tests advance directly across deadlines without sleep
 
 ## 16. Deliberate extension boundary
 
-Independent cognitive batteries, controlled-study allocation, remote authenticated backup, teacher dashboards, Portuguese/Romanian translation, speech instructions, native store packaging, and an elaborate reward economy remain future extensions. Optional Home Screen install and offline reload shipped in 1.2.0; they must not displace correctness of the main trial loop. Do not invent clinical thresholds or a normative scoring model.
+Independent cognitive batteries, controlled-study allocation, remote authenticated backup, teacher dashboards, Portuguese/Romanian translation, speech instructions, native store packaging, and an elaborate reward economy remain future extensions. Optional Home Screen install and offline reload shipped in 1.2.0; they must not displace correctness of the main trial loop. Garden brightness (ivory / dusk / match device, with a header sun/moon) is chrome only; see `DARK_MODE_IMPLEMENTATION_PLAN.md`. Do not invent clinical thresholds or a normative scoring model.
 
 ## 17. Technical references checked
 
@@ -347,3 +347,5 @@ The supplied spec and review contain the domain sources and remain the primary d
 Implementation and verification results will be appended after the build is exercised. Any departures from this plan will be explicit here and in the README.
 
 PWA/offline (1.2.0): production-only Workbox precache, `registerType: 'prompt'` so a sitting is not swapped mid-round, Settings install/persist copy, and `displayMode` recorded on new sessions. Vite `base` remains `./`. GitHub Pages MIME type uses `manifest.json`. See `PWA_OFFLINE_IMPLEMENTATION_PLAN.md`.
+
+Garden brightness: header sun/moon plus Settings Match device / Light / Dark. Default ivory. Stimulus colours unchanged. See `DARK_MODE_IMPLEMENTATION_PLAN.md`.

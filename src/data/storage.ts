@@ -1,5 +1,5 @@
 import type { Preferences, Profile, Session } from '../core/types';
-import { defaults } from '../core/protocol';
+import { coerceTheme, defaults } from '../core/protocol';
 let dbPromise: Promise<IDBDatabase> | undefined;
 function database(): Promise<IDBDatabase> {
   if (!dbPromise) dbPromise = new Promise((resolve, reject) => {
@@ -52,7 +52,7 @@ export function newProfile(name = 'Gardener'): Profile { return { id: crypto.ran
 export async function loadData() {
   const [profiles, sessions, prefs, activeId] = await Promise.all([getAll<Profile>('profiles'), listSessions(), get<Preferences>('settings'), get<string>('activeProfile')]);
   if (!profiles.length) { const p = newProfile(); await saveProfile(p); profiles.push(p); }
-  return { profiles, sessions, prefs: { ...defaults, ...prefs }, activeId: profiles.some(p => p.id === activeId) ? activeId! : profiles[0].id };
+  return { profiles, sessions, prefs: { ...defaults, ...prefs, theme: coerceTheme(prefs?.theme) }, activeId: profiles.some(p => p.id === activeId) ? activeId! : profiles[0].id };
 }
 export async function deleteProfile(id: string) {
   await writeQueue.catch(() => {});

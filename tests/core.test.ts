@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { generate, trialSeed } from '../src/core/random';
-import { defaults, hashConfig, protocolFor } from '../src/core/protocol';
+import { defaults, coerceTheme, hashConfig, oppositeTheme, protocolFor, resolveTheme } from '../src/core/protocol';
 import { advance, initialController } from '../src/core/adaptation';
 import { createSession } from '../src/core/engine';
 import { distribution, scoreTrial, summarize } from '../src/core/scoring';
@@ -27,6 +27,11 @@ describe('seeded stimuli', () => {
   it('rejects invalid spans and creates independent attempt seeds', () => { expect(() => generate(1, 8, training)).toThrow(); expect(new Set(Array.from({ length: 100 }, (_, i) => trialSeed(42, i))).size).toBe(100); });
   it('keeps assessment config independent of training settings', () => expect(protocolFor('assessment', { ...defaults, rounds: 5, startSpan: 7, delayMs: 3000 })).toEqual(protocolFor('assessment')));
   it('hashes all resolved task settings', () => { expect(hashConfig(training)).toBe(hashConfig(structuredClone(training))); expect(hashConfig({ ...training, delayMs: 3000 })).not.toBe(hashConfig(training)); });
+  it('treats garden brightness as chrome, not protocol', () => {
+    expect(coerceTheme(undefined)).toBe('light'); expect(coerceTheme('Dark')).toBe('light'); expect(coerceTheme('system')).toBe('system');
+    expect(resolveTheme('system', true)).toBe('dark'); expect(resolveTheme('light', true)).toBe('light'); expect(oppositeTheme('dark')).toBe('light');
+    expect(protocolFor('training', { ...defaults, theme: 'dark' })).toEqual(protocolFor('training'));
+  });
 });
 describe('reproducible scores', () => {
   it('separates strict from perfect recall with a sorting error', () => { const t = trial(); t.sorts[0].observed = 'worm'; const score = scoreTrial(t); expect(score.exact).toBe(true); expect(score.strict).toBe(false); expect(score.sortCorrect).toBe(2); expect(score.sortWrong).toBe(1); });

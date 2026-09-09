@@ -7,6 +7,7 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
     chart: <><path d="M4 4v16h16M8 15l4-5 4 2 4-7" /></>,
     settings: <><path d="M4 7h16M4 17h16" /><circle cx="9" cy="7" r="3" /><circle cx="15" cy="17" r="3" /></>,
     sun: <><circle cx="12" cy="12" r="4" /><path d="M12 1v2m0 18v2M1 12h2m18 0h2M4 4l2 2m12 12 2 2M4 20l2-2M18 6l2-2" /></>,
+    moon: <path d="M20 15a8 8 0 1 1-8-11 6.5 6.5 0 0 0 8 11Z" />,
     clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v6l4 2" /></>,
     check: <path d="m5 12 5 5L20 6" />,
     close: <path d="m6 6 12 12M6 18 18 6" />,

@@ -8,8 +8,9 @@ export interface Protocol {
   greenMs: number; delayMs: number; recallMs: number; maxMinutes: number;
   fixedSort: boolean; centralSort: boolean; allowRepeats: boolean;
 }
+export type ThemePreference = 'system' | 'light' | 'dark';
 export interface Preferences {
-  sound: boolean; reducedMotion: boolean; rounds: number; startSpan: number; delayMs: number;
+  sound: boolean; reducedMotion: boolean; theme: ThemePreference; rounds: number; startSpan: number; delayMs: number;
   calibration: { pixelsPerCm: number; viewport: string } | null;
 }
 export interface Profile { id: string; name: string; createdAt: string; learned: boolean }

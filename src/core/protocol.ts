@@ -1,6 +1,21 @@
-import type { Mode, Preferences, Protocol } from './types';
+import type { Mode, Preferences, Protocol, ThemePreference } from './types';
 export const BUILD_VERSION = '1.2.0';
-export const defaults: Preferences = { sound: false, reducedMotion: false, rounds: 10, startSpan: 2, delayMs: 5000, calibration: null };
+export const THEME_COLOR_LIGHT = '#244c3c';
+export const THEME_COLOR_DARK = '#161c18';
+export const defaults: Preferences = { sound: false, reducedMotion: false, theme: 'light', rounds: 10, startSpan: 2, delayMs: 5000, calibration: null };
+export function coerceTheme(value: unknown): ThemePreference {
+  return value === 'system' || value === 'dark' || value === 'light' ? value : 'light';
+}
+export function resolveTheme(preference: ThemePreference, systemDark: boolean): 'light' | 'dark' {
+  if (preference === 'system') return systemDark ? 'dark' : 'light';
+  return preference;
+}
+export function oppositeTheme(resolved: 'light' | 'dark'): ThemePreference {
+  return resolved === 'dark' ? 'light' : 'dark';
+}
+export function storedTheme(): ThemePreference {
+  try { return coerceTheme(typeof localStorage === 'undefined' ? undefined : localStorage.getItem('worm-theme')); } catch { return 'light'; }
+}
 export function protocolFor(mode: Mode, prefs: Preferences = defaults): Protocol {
   const common: Protocol = {
     id: `worm-${mode}`, version: '1.0.0', mode, startSpan: 2, maxSpan: 7,
