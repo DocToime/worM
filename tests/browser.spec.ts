@@ -17,8 +17,8 @@ async function seedSession(page: Page, mode: Mode, rounds?: number) {
   }, { mode, rounds });
   await page.reload();
   await page.clock.install();
-  await page.getByRole('button', { name: 'Return to my harvest' }).click();
-  await page.getByRole('button', { name: 'Let’s begin' }).click();
+  await page.locator('.hero-cta').click();
+  await page.getByRole('button', { name: 'Start round' }).click();
   await expect(page.locator('.game-page')).toHaveAttribute('data-phase', 'cue');
   return id;
 }
@@ -62,8 +62,8 @@ test('home, profile settings, mobile layout and empty history', async ({ page })
   await expect(page.getByRole('heading', { name: 'A little garden. A growing memory.' })).toBeVisible();
   await expect(page.locator('.plant-cell')).toHaveCount(9);
   await page.screenshot({ path: 'test-results/home-desktop.png', fullPage: true });
-  await page.getByRole('button', { name: 'My progress' }).click();
-  await expect(page.getByRole('heading', { name: 'Every garden starts somewhere.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Progress' }).click();
+  await expect(page.getByRole('heading', { name: 'No sessions yet.' })).toBeVisible();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByLabel('Nickname', { exact: true }).fill('Rowan');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
@@ -74,24 +74,21 @@ test('home, profile settings, mobile layout and empty history', async ({ page })
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: 'test-results/home-mobile.png', fullPage: true });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await page.getByRole('button', { name: 'Memory check-in', exact: true }).click();
-  await page.getByRole('button', { name: 'Start my harvest' }).click();
-  // New profiles enter the introduction before the actual device-gated session.
-  await expect(page.getByRole('heading', { name: 'Meet your peppers.' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Memory check-in', exact: true })).toBeDisabled();
+  await expect(page.getByText('Check-ins need a larger screen.')).toBeVisible();
   expect(errors).toEqual([]);
 });
 test('tutorial checks both categories and a real recall before combined practice', async ({ page }) => {
   await page.goto('/'); await page.clock.install();
-  await page.getByRole('button', { name: 'Start my harvest' }).click();
-  await page.getByRole('button', { name: 'Try sorting' }).click();
+  await page.getByRole('button', { name: 'Start training' }).click();
   await page.getByRole('button', { name: 'Sauce, worm pepper, F or right arrow' }).click();
-  await expect(page.getByText('No worm here. Try the market crate on the left.')).toBeVisible();
+  await expect(page.getByText('No worm: choose Market.')).toBeVisible();
   await page.keyboard.press('a'); await page.keyboard.press('f');
   await page.getByRole('button', { name: 'Try remembering' }).click();
   await page.clock.runFor(3500);
   await page.locator('[data-cell="1"]').click(); await page.clock.runFor(200); await page.locator('[data-cell="6"]').click();
-  await page.getByRole('button', { name: 'Start combined practice' }).click();
-  await expect(page.getByRole('heading', { name: 'Ready for your harvest?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Start practice' }).click();
+  await expect(page.locator('.game-page')).toHaveAttribute('data-phase', 'cue');
   await expect(page.getByText('Guided practice', { exact: true })).toBeVisible();
 });
 test('complete training saves separate scores, history and downloadable backups', async ({ page }) => {
@@ -99,20 +96,21 @@ test('complete training saves separate scores, history and downloadable backups'
   const id = await seedSession(page, 'training', 5), p = { ...protocolFor('training'), rounds: 5 };
   for (let round = 0; round < 5; round++) {
     await playRound(page, p, round, 2, round === 0);
-    await page.getByRole('button', { name: round === 4 ? 'See my harvest' : 'Next harvest', exact: true }).click();
+    await page.getByRole('button', { name: round === 4 ? 'Results' : 'Next round', exact: true }).click();
     if (round === 4) await page.clock.runFor(50);
   }
-  await expect(page.getByRole('heading', { name: 'A little effort. A lovely harvest.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your results' })).toBeVisible();
   await expect(page.locator('.result-stats')).toContainText('100%');
   await page.screenshot({ path: 'test-results/results.png', fullPage: true });
   await expect.poll(async () => (await readSession(page, id))?.status).toBe('completed');
   const saved = await readSession(page, id);
   expect(saved.trials).toHaveLength(5); expect(saved.trials.every((t: { score: { strict: boolean } }) => t.score.strict)).toBe(true);
+  await page.getByText('Download session', { exact: true }).click();
   const jsonWait = page.waitForEvent('download'); await page.getByRole('button', { name: 'Download JSON' }).click(); const json = await jsonWait; expect(json.suggestedFilename()).toMatch(/\.json$/);
   const stream = await json.createReadStream(); let content = ''; stream!.setEncoding('utf8'); for await (const chunk of stream!) content += chunk; const exported = JSON.parse(content); expect(exported.sessions[0].trials).toHaveLength(5); expect(exported.sessions[0].events.length).toBeGreaterThan(50);
   const csvWait = page.waitForEvent('download'); await page.getByRole('button', { name: 'Download CSV' }).click(); expect((await csvWait).suggestedFilename()).toMatch(/\.csv$/);
-  await page.getByRole('button', { name: 'My progress' }).click(); await expect(page.locator('.history-row')).toHaveCount(1);
-  await page.reload(); await page.getByRole('button', { name: 'My progress' }).click(); await expect(page.locator('.history-row')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Progress' }).click(); await expect(page.locator('.history-row')).toHaveCount(1);
+  await page.reload(); await page.getByRole('button', { name: 'Progress' }).click(); await expect(page.locator('.history-row')).toHaveCount(1);
   expect(errors).toEqual([]);
 });
 test('assessment administers all fifteen rounds at spans two, three and four', async ({ page }) => {
@@ -120,10 +118,10 @@ test('assessment administers all fifteen rounds at spans two, three and four', a
   const id = await seedSession(page, 'assessment'), p = protocolFor('assessment');
   for (let round = 0; round < 15; round++) {
     await playRound(page, p, round, 2 + Math.floor(round / 5));
-    await page.getByRole('button', { name: round === 14 ? 'See my harvest' : 'Next harvest', exact: true }).click();
+    await page.getByRole('button', { name: round === 14 ? 'Results' : 'Next round', exact: true }).click();
     if (round === 14) await page.clock.runFor(50);
   }
-  await expect(page.getByRole('heading', { name: 'A little effort. A lovely harvest.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your results' })).toBeVisible();
   await expect.poll(async () => (await readSession(page, id))?.status).toBe('completed');
   const saved = await readSession(page, id); expect(saved.trials.map((t: { span: number }) => t.span)).toEqual([...Array(5).fill(2), ...Array(5).fill(3), ...Array(5).fill(4)]);
   expect(saved.trials.every((t: { score: { strict: boolean } }) => t.score.strict)).toBe(true);
@@ -132,19 +130,20 @@ test('pause, adult help and reload preserve invalid attempts and resume fresh', 
   const errors: string[] = []; page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
   const id = await seedSession(page, 'training');
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.locator('.help-options summary').click();
   await page.getByRole('button', { name: 'Note adult help for this round' }).click();
-  await page.getByRole('button', { name: 'Continue with fresh peppers' }).click();
+  await page.getByRole('button', { name: 'Restart round' }).click();
   await expect(page.locator('.game-page')).toHaveAttribute('data-phase', 'cue');
   await expect.poll(async () => (await readSession(page, id))?.trials.length).toBe(2);
   await page.reload();
-  await page.getByRole('button', { name: 'Return to my harvest' }).click();
-  await expect(page.getByRole('heading', { name: 'A little breathing room.' })).toBeVisible();
-  await page.getByRole('button', { name: 'Continue with fresh peppers' }).click();
+  await page.locator('.hero-cta').click();
+  await expect(page.getByRole('heading', { name: 'Paused' })).toBeVisible();
+  await page.getByRole('button', { name: 'Restart round' }).click();
   await expect.poll(async () => (await readSession(page, id))?.trials.length).toBe(3);
   const s = await readSession(page, id); expect(s.trials[0].assisted).toBe(true); expect(s.trials[0].status).toBe('interrupted'); expect(s.trials[1].status).toBe('interrupted'); expect(s.trials[2].scheduledIndex).toBe(1); expect(s.trials[0].seed).not.toBe(s.trials[2].seed);
   expect(errors.filter(error => !error.includes('favicon'))).toEqual([]);
 });
-test('touch play is usable on a phone and settings delete only the chosen profile', async ({ page }) => {
+test('phone layout and settings delete only the chosen profile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedSession(page, 'training', 5);
   await page.screenshot({ path: 'test-results/game-mobile.png' });
@@ -155,5 +154,5 @@ test('touch play is usable on a phone and settings delete only the chosen profil
   await page.getByLabel('Add a gardener', { exact: true }).fill('Second gardener'); await page.getByRole('button', { name: 'Add', exact: true }).click();
   await page.getByRole('button', { name: 'Delete this gardener and their sessions…' }).click(); await page.getByRole('button', { name: 'Delete gardener & sessions', exact: true }).click();
   await expect(page.locator('.profile-chip')).toContainText('Gardener');
-  await page.getByRole('button', { name: 'My progress' }).click(); await expect(page.locator('.history-row')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Progress' }).click(); await expect(page.locator('.history-row')).toHaveCount(1);
 });

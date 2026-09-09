@@ -34,13 +34,13 @@ Use the same origin and browser profile to return to your saved garden: changing
 
 ## Play
 
-1. Choose **Daily training** or **Memory check-in** on the home screen.
+1. Choose **Daily training** or **Memory check-in** on the home screen. Check-ins are unavailable on screens smaller than 700×600 CSS pixels.
 2. On the first visit, complete a sorting check, a two-plant recall check, and combined practice. Two consecutive successful combined rounds unlock the full session.
-3. Remember the location of each ripe pepper. When prompted, choose **To market** for a good pepper and **Make sauce** for a worm pepper.
+3. Remember the location of each ripe pepper. When prompted, choose **Market** for a good pepper and **Sauce** for a worm pepper.
 4. While the barn doors are closed, hold the order in mind.
 5. Tap the green plants in the order they ripened.
 
-Sorting supports pointer/touch, **A / left arrow**, and **F / right arrow**. Recall supports pointer/touch and standard keyboard focus with Enter/Space. **Escape** or **Pause** takes a break. Pausing an active round discards that attempt from the score and starts a fresh sequence on return.
+Sorting supports pointer/touch, **A / left arrow**, and **F / right arrow**. Recall supports pointer/touch or arrow-key navigation with Enter/Space. The garden is one keyboard tab stop; focus moves to it when recall begins. **Escape** or **Pause** takes a break. Pausing an active round discards that attempt from the score and starts a fresh sequence on return.
 
 Settings include separate local gardeners, nickname, number of training rounds, starting span, retention interval, gentle sound, reduced motion, and optional ruler-based garden calibration. Memory check-ins keep their own fixed settings. Training/practice support phones; check-ins and the original-style protocol require a viewport of at least 700×600 CSS pixels.
 
@@ -78,7 +78,7 @@ Results keep memory and sorting separate:
 
 The spatial cue precedes sorting eligibility; its phase event is retained so analyses can also derive elapsed time from the first spatial/category presentation. A timeout has a null observed RT, not an invented deadline-length response. Guided, practice, interrupted, and assisted attempts are excluded from standard score denominators.
 
-The journal shows each session independently. A check-in trend appears only when there are at least two completed assessments with matching protocol configuration, viewport, pixel ratio, browser identifier, calibration, and observed input modalities. Training visits at different spans/settings are not collapsed into one mixed-difficulty progress curve.
+The journal shows each session independently. A check-in trend appears only when there are at least two completed assessments with matching protocol configuration, presentation layout version, viewport, pixel ratio, browser identifier, calibration, and observed input modalities. Training visits at different spans/settings are not collapsed into one mixed-difficulty progress curve.
 
 ## Data, recovery, and export
 
@@ -90,7 +90,7 @@ Writes are serialised. “Saved on this device” means the latest session write
 
 Reload recovery retains committed completed rounds and invalidates any partially memorised attempt. The engine never resumes an old sequence halfway through. A crash can lose responses after the most recent completed write. An active session's latest checkpoint is recovered on the next visit to the same origin/profile.
 
-Download JSON or CSV from results, or all finished sessions for the selected gardener from the journal:
+Open **Download session** on results for JSON or CSV, or all finished sessions for the selected gardener from the journal:
 
 - **JSON:** complete versioned record, including every event and realised stimulus. Use this for backups and detailed analysis.
 - **CSV:** one row per attempt, with raw sequence/response arrays encoded as quoted JSON cells and separate score columns. Interrupted attempts retain null scores. Spreadsheet formula prefixes are escaped.
@@ -116,6 +116,8 @@ src/styles.css  original responsive design
 tests/          core, fake-clock engine, and real-browser tests
 ```
 
+The September 2026 interface review is in [review/REVIEW.md](review/REVIEW.md), with the implemented changes in [review/IMPLEMENTED.md](review/IMPLEMENTED.md); its evidence records the original interface. Active play now uses a height-constrained layout, including short landscape screens, with a fixed garden position across phases. Replay gardens appear only on request, and results keep technical details and downloads collapsed.
+
 The implementation plan contains the fuller provenance register, formulas, state machine, default values, and verification criteria. `copy.ts` centralises the repeated timed-phase instructions; other English interface text remains colocated with its component. Full translation infrastructure is a future extension.
 
 ## Verification
@@ -129,7 +131,7 @@ npm run test:browser
 
 Playwright uses port 5174 and reuses the matching local dev server, or starts one if needed. Its browser clock exercises the real production engine without adding test-only timing switches or answer hooks to the app. Test fixtures create deterministic sessions through the same local storage and engine modules used by the interface.
 
-The test suite covers generation, scoring, missingness, adaptation, fixed timings, repeat/early inputs, interruption/recovery, profile isolation, onboarding, complete training and assessment sessions, downloads, history persistence, and responsive layouts. Screenshots are written under `test-results/` when the browser suite runs. That directory is generated and ignored by source control.
+The test suite covers generation, scoring, missingness, adaptation, fixed timings, repeat/early inputs, interruption/recovery, profile isolation, onboarding, complete training and assessment sessions, downloads, history persistence, and responsive layouts. The playability suite also checks 16 viewport sizes, calibrated layouts, no-scroll touch play, keyboard navigation and leaving an empty session. Screenshots are written under `test-results/` when the browser suite runs. That directory is generated and ignored by source control.
 
 Real physical tablet/touchscreen timing, browser storage eviction under device pressure, and external display/input timing measurements require device testing beyond automated desktop browser checks. Cross-browser/device equivalence is not inferred from these checks.
 

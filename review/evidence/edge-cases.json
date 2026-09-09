@@ -1,0 +1,174 @@
+{
+  "errors": [
+    "Cannot read properties of null (reading 'span')"
+  ],
+  "readyBeforeClick": {
+    "scrollY": 0,
+    "height": 667,
+    "focused": "BODY",
+    "elements": [
+      {
+        "class": "game-topline",
+        "top": 102.54261016845703,
+        "bottom": 140.5426025390625
+      },
+      {
+        "class": "game-meta",
+        "top": 174.5426025390625,
+        "bottom": 185.5426025390625
+      },
+      {
+        "class": "garden garden-preview ",
+        "top": 381.5426025390625,
+        "bottom": 621.5426025390625
+      }
+    ]
+  },
+  "firstCueAfterClick": {
+    "scrollY": 31,
+    "height": 667,
+    "focused": "BODY",
+    "elements": [
+      {
+        "class": "game-topline",
+        "top": 67,
+        "bottom": 105
+      },
+      {
+        "class": "game-meta",
+        "top": 139,
+        "bottom": 150
+      },
+      {
+        "class": "phase-heading",
+        "top": 174,
+        "bottom": 259
+      },
+      {
+        "class": "garden  ",
+        "top": 276,
+        "bottom": 611
+      },
+      {
+        "class": "basket-row",
+        "top": 661,
+        "bottom": 757
+      }
+    ]
+  },
+  "afterAutoScrollToSort": {
+    "scrollY": 121,
+    "height": 667,
+    "focused": "BODY",
+    "elements": [
+      {
+        "class": "game-topline",
+        "top": -23,
+        "bottom": 15
+      },
+      {
+        "class": "game-meta",
+        "top": 49,
+        "bottom": 60
+      },
+      {
+        "class": "phase-heading",
+        "top": 84,
+        "bottom": 169
+      },
+      {
+        "class": "garden  ",
+        "top": 186,
+        "bottom": 521
+      },
+      {
+        "class": "basket-row",
+        "top": 571,
+        "bottom": 667
+      }
+    ]
+  },
+  "nextCueAfterSort": {
+    "scrollY": 121,
+    "height": 667,
+    "focused": "BODY",
+    "elements": [
+      {
+        "class": "game-topline",
+        "top": -23,
+        "bottom": 15
+      },
+      {
+        "class": "game-meta",
+        "top": 49,
+        "bottom": 60
+      },
+      {
+        "class": "phase-heading",
+        "top": 84,
+        "bottom": 169
+      },
+      {
+        "class": "garden  ",
+        "top": 186,
+        "bottom": 521
+      },
+      {
+        "class": "basket-row",
+        "top": 571,
+        "bottom": 667
+      }
+    ]
+  },
+  "finishBeforeFirstRound": {
+    "bodyText": "",
+    "errors": [
+      "Cannot read properties of null (reading 'span')"
+    ]
+  },
+  "modeAfterOriginal": {
+    "description": "The original-style task: longer retention and gated levels.",
+    "modes": [
+      {
+        "text": "Daily training",
+        "pressed": "false"
+      },
+      {
+        "text": "Memory check-in",
+        "pressed": "false"
+      }
+    ],
+    "meta": "10 rounds · up to 10 minutes\nNo rush. Just a little focus."
+  },
+  "modeStarted": "ORIGINAL-STYLE PROTOCOL",
+  "textStyles": [
+    {
+      "selector": ".phase-heading p",
+      "color": "rgb(129, 138, 119)",
+      "fontSize": "13px",
+      "bodyBackground": "rgb(248, 247, 241)"
+    },
+    {
+      "selector": ".game-meta",
+      "color": "rgb(138, 146, 126)",
+      "fontSize": "10px",
+      "bodyBackground": "rgb(248, 247, 241)"
+    },
+    {
+      "selector": ".basket-button small",
+      "color": "rgb(147, 153, 129)",
+      "fontSize": "9px",
+      "bodyBackground": "rgb(248, 247, 241)"
+    },
+    {
+      "selector": ".game-footnote",
+      "color": "rgb(154, 160, 140)",
+      "fontSize": "10px",
+      "bodyBackground": "rgb(248, 247, 241)"
+    }
+  ],
+  "resize": {
+    "phase": "interrupted",
+    "message": "TAKE YOUR TIME\nA little breathing room.\n\nYour completed rounds are saved as you go.\nWe’ll begin the next round with a fresh sequence.\n\nThe round was interrupted so its timing stays fair.\n\nContinue with fresh peppers\n\nUse a viewport of at least 700 × 600 pixels to continue.\n\nNote adult help for this round\nFinish session"
+  }
+}
