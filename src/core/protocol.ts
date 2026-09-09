@@ -20,4 +20,5 @@ export function hashConfig(value: unknown): string {
   return (h >>> 0).toString(16).padStart(8, '0');
 }
 export function viewportKey() { return `${window.innerWidth}x${window.innerHeight}@${window.devicePixelRatio}`; }
+export function compactViewport() { return innerWidth < 700 || innerHeight < 600; }
 export const modeNames: Record<Mode, string> = { training: 'Daily training', assessment: 'Memory check-in', practice: 'Guided practice', reconstruction: 'Original-style protocol' };

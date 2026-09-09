@@ -93,14 +93,38 @@ for (const [width, height] of [[375,667],[700,600],[1366,768],[1440,900],[844,39
   });
 }
 
-test('phone home fits its primary flow and rejects check-in before onboarding', async ({ page }) => {
+test('phone home fits its primary flow and warns before a small-screen check-in', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 640 });
   await page.goto('/');
   await page.locator('.hero-cta').waitFor();
   await fits(page, '.hero-cta');
-  await expect(page.getByRole('button', { name: 'Memory check-in', exact: true })).toBeDisabled();
-  await page.getByRole('button', { name: 'Start training', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Memory check-in', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'Memory check-in', exact: true }).click();
+  await expect(page.locator('#screen-hint')).toBeVisible();
+  await page.getByRole('button', { name: 'Start check-in', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Sort the peppers.' })).toBeVisible();
+});
+
+test('phone check-in records viewport and can start a round', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.goto('/');
+  await page.evaluate(async () => {
+    const url = '/src/data/storage.ts';
+    const storage = await import(url);
+    const data = await storage.loadData();
+    await storage.saveProfile({ ...data.profiles[0], learned: true });
+  });
+  await page.reload();
+  await page.getByRole('button', { name: 'Memory check-in', exact: true }).click();
+  await expect(page.locator('#screen-hint')).toBeVisible();
+  await page.getByRole('button', { name: 'Start check-in', exact: true }).click();
+  await expect(page.locator('.game-page')).toHaveAttribute('data-phase', 'cue');
+  const environment = await page.evaluate(async () => {
+    const url = '/src/data/storage.ts';
+    const storage = await import(url);
+    return (await storage.listSessions())[0].environment;
+  });
+  expect(environment.viewport).toEqual({ width: 360, height: 640 });
 });
 
 test('keyboard recall uses spatial arrows, announces picks and excludes disabled controls', async ({ page }) => {

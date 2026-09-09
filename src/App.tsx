@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Mode, Preferences, Profile, Session } from './core/types';
-import { defaults, modeNames, protocolFor, viewportKey } from './core/protocol';
+import { compactViewport, defaults, modeNames, protocolFor, viewportKey } from './core/protocol';
 import { createSession } from './core/engine';
 import { deleteProfile, loadData, newProfile, savePreferences, saveProfile, saveSession, setActiveProfile } from './data/storage';
 import { Icon, Pepper } from './components/Art';
@@ -15,9 +15,9 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('home'), [mode, setMode] = useState<Mode>('training');
   const [profiles, setProfiles] = useState<Profile[]>([]), [activeId, setActiveId] = useState(''), [prefs, setPrefs] = useState<Preferences>(defaults), [sessions, setSessions] = useState<Session[]>([]), [current, setCurrent] = useState<Session | null>(null);
   const [autoStart, setAutoStart] = useState(false);
-  const [largeScreen, setLargeScreen] = useState(innerWidth >= 700 && innerHeight >= 600);
+  const [compactScreen, setCompactScreen] = useState(compactViewport());
   const [loading, setLoading] = useState(true), [storageState, setStorageState] = useState<'saved' | 'saving' | 'error'>('saved'), [notice, setNotice] = useState('');
-  useEffect(() => { const resize = () => setLargeScreen(innerWidth >= 700 && innerHeight >= 600); window.addEventListener('resize', resize); return () => window.removeEventListener('resize', resize); }, []);
+  useEffect(() => { const resize = () => setCompactScreen(compactViewport()); window.addEventListener('resize', resize); return () => window.removeEventListener('resize', resize); }, []);
   const revision = useRef(0), destination = useRef<Mode>('training');
   useEffect(() => { loadData().then(data => { setProfiles(data.profiles); setActiveId(data.activeId); setPrefs(data.prefs); setSessions(data.sessions); }).catch(() => { const p = newProfile(); setProfiles([p]); setActiveId(p.id); setStorageState('error'); }).finally(() => setLoading(false)); }, []);
   useEffect(() => { document.documentElement.dataset.reducedMotion = String(prefs.reducedMotion); }, [prefs.reducedMotion]);
@@ -33,7 +33,6 @@ export default function App() {
   const active = ownSessions.find(s => s.status === 'active');
   const navigate = (to: Screen) => { setNotice(''); if (to === 'home') setMode('training'); setScreen(to); };
   const launch = (m: Mode, startImmediately = true) => {
-    if (['assessment', 'reconstruction'].includes(m) && (innerWidth < 700 || innerHeight < 600)) { setNotice('This mode needs a larger screen. You can play daily training here.'); setScreen('home'); return; }
     if (active) { setAutoStart(false); setCurrent(active); setScreen('game'); return; }
     const session = createSession(activeId, protocolFor(m, prefs), {
       userAgent: navigator.userAgent, language: navigator.language,
@@ -48,7 +47,6 @@ export default function App() {
     setAutoStart(startImmediately); setCurrent(session); persist(session); setScreen('game');
   };
   const begin = (selected: Mode = mode) => {
-    if (!active && ['assessment', 'reconstruction'].includes(selected) && !largeScreen) { setNotice('This mode needs a larger screen. You can play daily training here.'); return; }
     destination.current = selected;
     if (active) { setAutoStart(false); setCurrent(active); setScreen('game'); return; }
     if (!profile.learned) setScreen('tutorial'); else launch(selected);
@@ -84,12 +82,12 @@ export default function App() {
           {active ? <p className="resume-note">Continue your {modeNames[displayedMode].toLowerCase()} session.</p> : <>
             <div className="mode-selector" role="group" aria-label="Session mode">
               <button aria-pressed={mode === 'training'} className={mode === 'training' ? 'selected' : ''} onClick={() => setMode('training')}><Icon name="sprout" size={18} /> Daily training</button>
-              <button aria-pressed={mode === 'assessment'} disabled={!largeScreen} aria-describedby={!largeScreen ? 'screen-hint' : undefined} className={mode === 'assessment' ? 'selected' : ''} onClick={() => setMode('assessment')}><Icon name="chart" size={18} /> Memory check-in</button>
+              <button aria-pressed={mode === 'assessment'} aria-describedby={mode === 'assessment' && compactScreen ? 'screen-hint' : undefined} className={mode === 'assessment' ? 'selected' : ''} onClick={() => setMode('assessment')}><Icon name="chart" size={18} /> Memory check-in</button>
             </div>
-            {!largeScreen && <p className="screen-hint" id="screen-hint">Check-ins need a larger screen.</p>}
+            {mode === 'assessment' && compactScreen && <p className="screen-hint" id="screen-hint">You can continue on this screen. This visit is saved with your screen size and isn’t mixed with larger-screen scores.</p>}
           </>}
           <p className="mode-description">{displayedMode === 'assessment' ? 'Fixed difficulty for comparing visits.' : displayedMode === 'reconstruction' ? 'Original-style rules with gated levels.' : displayedMode === 'practice' ? 'Practise sorting and remembering.' : 'Difficulty adjusts as you play.'}</p>
-          <button className="button button-primary hero-cta" disabled={!active && mode === 'assessment' && !largeScreen} onClick={() => begin()}>{startLabel}<Icon name="arrow" /></button>
+          <button className="button button-primary hero-cta" onClick={() => begin()}>{startLabel}<Icon name="arrow" /></button>
           <p className="hero-meta"><Icon name="clock" size={15} /> {selectedProtocol.rounds} rounds · up to {selectedProtocol.maxMinutes} minutes</p>
           {!profile.learned && !active && <p className="first-visit">First time? Start with a short practice.</p>}
           {!active && <button className="text-button" onClick={() => { destination.current = 'training'; navigate('tutorial'); }}>How to play <Icon name="arrow" size={16} /></button>}
@@ -97,7 +95,7 @@ export default function App() {
         </div>
         <div className="hero-illustration" aria-hidden="true"><Garden preview activeCell={4} /></div>
       </section>
-      {!active && <details className="advanced-mode"><summary>Original-style protocol</summary><p>Up to 15 rounds · up to 20 minutes. A 15-second delay and progression after 3 of 5 successful rounds.</p><button className="text-button" disabled={!largeScreen} onClick={() => begin('reconstruction')}>Start original-style protocol <Icon name="arrow" size={16} /></button>{!largeScreen && <p className="screen-hint">This mode needs a larger screen.</p>}</details>}
+      {!active && <details className="advanced-mode"><summary>Original-style protocol</summary><p>Up to 15 rounds · up to 20 minutes. A 15-second delay and progression after 3 of 5 successful rounds.</p><button className="text-button" onClick={() => begin('reconstruction')}>Start original-style protocol <Icon name="arrow" size={16} /></button>{compactScreen && <p className="screen-hint">You can continue on this screen. This visit is saved with your screen size and isn’t mixed with larger-screen scores.</p>}</details>}
     </main>}
     {screen === 'tutorial' && <Tutorial onPractice={() => launch('practice')} onBack={() => navigate('home')} />}
     {screen === 'game' && current && <Game autoStart={autoStart} key={current.id} session={current} prefs={prefs} onSave={persist} onEnd={ended} onSound={() => updatePrefs({ ...prefs, sound: !prefs.sound })} />}

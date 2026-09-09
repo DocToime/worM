@@ -74,8 +74,9 @@ test('home, profile settings, mobile layout and empty history', async ({ page })
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: 'test-results/home-mobile.png', fullPage: true });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await expect(page.getByRole('button', { name: 'Memory check-in', exact: true })).toBeDisabled();
-  await expect(page.getByText('Check-ins need a larger screen.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Memory check-in', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'Memory check-in', exact: true }).click();
+  await expect(page.locator('#screen-hint')).toBeVisible();
   expect(errors).toEqual([]);
 });
 test('tutorial checks both categories and a real recall before combined practice', async ({ page }) => {

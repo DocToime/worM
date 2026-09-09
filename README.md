@@ -34,7 +34,7 @@ Use the same origin and browser profile to return to your saved garden: changing
 
 ## Play
 
-1. Choose **Daily training** or **Memory check-in** on the home screen. Check-ins are unavailable on screens smaller than 700×600 CSS pixels.
+1. Choose **Daily training** or **Memory check-in** on the home screen. Smaller screens show a warning; the visit is still saved with its viewport so phone and tablet scores are not mixed.
 2. On the first visit, complete a sorting check, a two-plant recall check, and combined practice. Two consecutive successful combined rounds unlock the full session.
 3. Remember the location of each ripe pepper. When prompted, choose **Market** for a good pepper and **Sauce** for a worm pepper.
 4. While the barn doors are closed, hold the order in mind.
@@ -42,7 +42,7 @@ Use the same origin and browser profile to return to your saved garden: changing
 
 Sorting supports pointer/touch, **A / left arrow**, and **F / right arrow**. Recall supports pointer/touch or arrow-key navigation with Enter/Space. The garden is one keyboard tab stop; focus moves to it when recall begins. **Escape** or **Pause** takes a break. Pausing an active round discards that attempt from the score and starts a fresh sequence on return.
 
-Settings include separate local gardeners, nickname, number of training rounds, starting span, retention interval, gentle sound, reduced motion, and optional ruler-based garden calibration. Memory check-ins keep their own fixed settings. Training/practice support phones; check-ins and the original-style protocol require a viewport of at least 700×600 CSS pixels.
+Settings include separate local gardeners, nickname, number of training rounds, starting span, retention interval, gentle sound, reduced motion, and optional ruler-based garden calibration. Memory check-ins keep their own fixed settings. Check-ins and the original-style protocol can run on smaller screens, with a warning that those visits stay separate from larger-screen scores.
 
 ## Protocol decisions
 

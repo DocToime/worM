@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ButtonHTMLAttributes } from 'react';
 import { Engine } from '../core/engine';
 import type { Modality, Preferences, Quality, Session } from '../core/types';
-import { modeNames, viewportKey } from '../core/protocol';
+import { compactViewport, modeNames, viewportKey } from '../core/protocol';
 import { copy } from '../copy';
 import { Barn, Crate, Icon, Pepper } from './Art';
 import { Garden } from './Garden';
@@ -99,7 +99,6 @@ export default function Game({ autoStart = false, session, prefs, onSave, onEnd,
     return () => { cancelAnimationFrame(raf); window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); document.removeEventListener('visibilitychange', visibility); window.removeEventListener('blur', blur); window.removeEventListener('resize', resize); window.removeEventListener('pagehide', unload); replayTimers.current.forEach(clearTimeout); };
   }, [engine]);
   const start = () => {
-    if (['assessment', 'reconstruction'].includes(session.protocol.mode) && (innerWidth < 700 || innerHeight < 600)) return;
     setReplay(-1); setShowReplay(false); replayTimers.current.forEach(clearTimeout); replayTimers.current = [];
     engine.startNext();
   };
@@ -121,7 +120,7 @@ export default function Game({ autoStart = false, session, prefs, onSave, onEnd,
   const calibration = prefs.calibration?.viewport === viewportKey() ? prefs.calibration.pixelsPerCm * 16 : undefined;
   const progress = state.controller.validRounds / session.protocol.rounds;
   const isAssessment = session.protocol.mode === 'assessment';
-  const smallAssessment = ['assessment', 'reconstruction'].includes(session.protocol.mode) && (innerWidth < 700 || innerHeight < 600);
+  const smallAssessment = ['assessment', 'reconstruction'].includes(session.protocol.mode) && compactViewport();
   const sorting = ['sort', 'sort-feedback'].includes(state.phase);
   const sortOmitted = t?.sorts.find(s => s.item === state.item)?.omission;
   const phaseTitle = state.phase === 'sort-feedback' ? sortOmitted ? 'No response in time.' : isAssessment ? 'Response recorded.' : state.sortFeedback ? 'Correct.' : 'Incorrect.' : phaseCopy;
@@ -132,14 +131,14 @@ export default function Game({ autoStart = false, session, prefs, onSave, onEnd,
     {state.phase === 'complete' ? <p role="status">Finishing session…</p> : state.phase === 'ready' ? <section className="game-intro">
       <h1 ref={panelHeading} tabIndex={-1}>Ready to play?</h1><p>Remember the plants, sort each pepper,<br />then tap the plants in order.</p>
       {session.protocol.mode === 'practice' && <p>Complete two correct rounds in a row to finish practice.</p>}
-      <ActionButton className="button button-primary" onClick={start} disabled={smallAssessment}>Start round <Icon name="arrow" /></ActionButton>
-      {smallAssessment && <p className="notice">This mode needs a larger screen.</p>}
+      <ActionButton className="button button-primary" onClick={start}>Start round <Icon name="arrow" /></ActionButton>
+      {smallAssessment && <p className="notice">You can continue on this screen. Your viewport is saved with this visit.</p>}
       <ActionButton className="text-button" onClick={() => engine.finish()}>Finish for now</ActionButton>
     </section> : state.phase === 'interrupted' ? <section className="break-panel">
       <h1 ref={panelHeading} tabIndex={-1}>Paused</h1><p>Completed rounds are saved.<br />This round will restart with new plants.</p>
       {state.message !== 'pause' && <p className="muted">Your screen or session changed. Start again when you’re ready.</p>}
-      <div className="stack-actions"><ActionButton className="button button-primary" onClick={start} disabled={smallAssessment}>{engine.willEnd ? 'Results' : 'Restart round'} <Icon name="arrow" /></ActionButton>
-        {smallAssessment && <p className="notice">Use a larger screen to continue this mode.</p>}
+      <div className="stack-actions"><ActionButton className="button button-primary" onClick={start}>{engine.willEnd ? 'Results' : 'Restart round'} <Icon name="arrow" /></ActionButton>
+        {smallAssessment && <p className="notice">You can continue on this screen. Your viewport is saved with this visit.</p>}
         {!isAssessment && <ActionButton className="button button-outline" onClick={onSound}><Icon name={prefs.sound ? 'volume' : 'mute'} /> Sound: {prefs.sound ? 'on' : 'off'}</ActionButton>}
         <details className="help-options"><summary>Help with this round</summary><ActionButton className="text-button" onClick={() => { engine.assistance(); refresh(n => n + 1); }} disabled={t?.assisted}>{t?.assisted ? 'Adult help noted' : 'Note adult help for this round'}</ActionButton></details>
         <ActionButton className="text-button" onClick={() => engine.finish()}>Finish session</ActionButton>
